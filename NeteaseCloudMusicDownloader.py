@@ -10,7 +10,7 @@ import os
 import _thread
 import time
 import re
-cloud_music_api = 'http://192.168.0.25:3000'
+cloud_music_api = 'http://haoxx.imwork.net:3000' # 收起你对这个IP的想法
 cloud_music_playlist = '510113940'
 def id_to_url_type_dict(data_all):
     dict = {}
