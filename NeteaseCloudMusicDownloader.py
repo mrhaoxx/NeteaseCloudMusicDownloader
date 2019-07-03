@@ -12,8 +12,8 @@ import time
 import re
 # Config
 # Api
-cloud_music_api = 'http://haoxx.imwork.net:3000' # 收起你对这个IP的想法
-cloud_music_playlist = '2455110707'
+cloud_music_api = 'http://192.168.0.25:3000'
+cloud_music_playlist = '510113940'
 # Dir
 dir_temp="temp/"
 dir_end="music/"
@@ -75,7 +75,7 @@ def GetFileMd5(filename):
         b = f.read(8096)
         if isverbose:
             n = n+8096
-            disbar(a,n,"MD5 Calculating")
+            disbar(a,n,"[MD5] Calculating")
         if not b :
            break
         myhash.update(b)
@@ -130,7 +130,7 @@ def download_loop(tracks,trackIds):
         data_this=data[id];
         ismd5=False;
         try:
-            disbar(all,i,"[MD5 Calculating]"+name)
+            disbar(all,i,"[MD5]"+name)
             if not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1])):
                 disbar(all,i,'[Download]'+name)
                 download(data_this[0],getFilename(name,artist,data_this[1]));
@@ -139,17 +139,17 @@ def download_loop(tracks,trackIds):
                 ismd5=True;
                 if islog:
                     sleep(0.1)
-            set_mp3_info(name,artist,getFilename(name,artist,data_this[1]),adl,data_this[1]);
+            set_mp3_info(name,artist,getFilename(name,artist,data_this[1]),adl,data_this[1],all,i);
             disbar(all,i,'[Processed]"'+name+'"')
-        except:
+        except IOError as d :
+            print(d.strerror)
             if islog:
                 print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
                 print('[ERROR]'+name);
                 errorinfo[id]=(name);
                 disbar(all,i,'[ERROR]'+name)
-                sleep(0.5)
                 status_failed=status_failed+1;
-            pass
+            #pass
         else:
             print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
             if not ismd5:
@@ -171,10 +171,11 @@ def download_loop(tracks,trackIds):
             print("Error Music:",errorinfo);
     #mergemp3s(files)
     return;
-def set_mp3_info(name,artist,file,adl,type): 
+def set_mp3_info(name,artist,file,adl,type,all,i): 
     if isJunkInfo:
         disbar(1,0,"Setting up mp3 info")
         print()
+    disbar(all,i,'[COPYING]'+name)
     shutil.copy(file,dir_end)
     tag = id3.Tag()
     tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+type);    
