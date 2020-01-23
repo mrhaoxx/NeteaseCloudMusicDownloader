@@ -1,3 +1,4 @@
+colorama
 eyeD3
 get
 pip
