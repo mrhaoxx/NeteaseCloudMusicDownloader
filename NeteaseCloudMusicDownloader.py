@@ -10,9 +10,11 @@ import hashlib
 import os
 import time
 import re
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 # Config
 # Api
-cloud_music_api = 'http://star-home.top:8000/proxy/glype/browse.php?f=norefer&b=108&u=http%3A%2F%2F163musicapi'
+cloud_music_api = 'https://163musicapi.star-home.top:4430'
 cloud_music_playlist = '510113940'
 # Dir
 dir_temp="temp/"
