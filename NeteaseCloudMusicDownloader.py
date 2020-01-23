@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from urllib import request
 from urllib import parse
+import urllib.error
 from eyed3 import id3
 from time import sleep
 import ffmpeg
@@ -12,7 +13,7 @@ import time
 import re
 # Config
 # Api
-cloud_music_api = 'http://192.168.0.25:3000'
+cloud_music_api = 'http://star-home.top:8000/proxy/glype/browse.php?f=norefer&b=108&u=http%3A%2F%2F163musicapi'
 cloud_music_playlist = '510113940'
 # Dir
 dir_temp="temp/"
@@ -23,10 +24,9 @@ isgenerateonefile=True
 isonefileRandom=True
 signalfile="all.mp3"
 # Log
-islog = True;
-isverbose = False;
-isJunkInfo = False;
-
+islog = True
+isverbose = True
+isJunkInfo = False
 
 
 isverbose = islog and isverbose
@@ -55,14 +55,14 @@ def validateTitle(title):
     if isJunkinfo:
         disbar(2,0,"Validating Title")
         print()
-    rstr = r"[\/\\\:\*\?\"\<\>\|]"
+    rstr = r"[\·\/\\\:\*\?\"\<\>\|]"
     new_title = re.sub(rstr, "_", title)
     if isJunkinfo:
         disbar(2,1,"Validating Title")
         print()
     return new_title
-def getFilename(name,artist,type):       
-    return dir_temp +validateTitle(name)+' - '+validateTitle(artist)+".mp3";
+def getFilename(name,artist,typea):       
+    return dir_temp +validateTitle(name)+' - '+validateTitle(artist)+"." + typea;
 def GetFileMd5(filename):
     if not os.path.isfile(filename):
         return
@@ -83,12 +83,9 @@ def GetFileMd5(filename):
     return myhash.hexdigest()
 def fetch_api(add):
     if isverbose:
-        disbar(2,0,"Fetching API:" + add[:15] + " ...")
-        print()
+        print("Fetching API:" + add[:25] + " ...")
     f = request.urlopen(cloud_music_api + add);
-    if isverbose:
-        disbar(2,1,"Fetching API:" + add[:15] + " ...")
-        print()
+    
     return f.read().decode('utf-8');
 def resolve_json(str):
     return json.loads(str);
@@ -98,14 +95,10 @@ def get_tracks_info(plerlist):
     return plerlist['tracks'];
 def get_tracks_ids(plerlist):
     return plerlist['trackIds'];
-def download(url,save):   
+def download(url,save):
     if isverbose:
-        disbar(2,0,"Downloading " + url +" to " + save)
-        print()
+        print("Downloaded " + url +" to " + save)
     request.urlretrieve(url, save);
-    if isverbose:
-        disbar(2,1,"Downloaded " + url +" to " + save)
-        print()
     return;
 
 def download_loop(tracks,trackIds): 
@@ -123,12 +116,16 @@ def download_loop(tracks,trackIds):
     data_all=resolve_json(fetch_api('/song/url?id='+s))['data'];  
     data=id_to_url_type_dict(data_all)
     for index in range(len(tracks)) :
-        name=tracks[index]['name'];
-        artist = tracks[index]['ar'][0]['name'];      
-        adl=tracks[index]['al']['name'];
-        id=tracks[index]['id'];
-        data_this=data[id];
-        ismd5=False;
+        name=tracks[index]['name']
+        artist = tracks[index]['ar'][0]['name']      
+        adl=tracks[index]['al']['name']
+        id=tracks[index]['id']
+        isavaible=resolve_json(fetch_api('/check/music?id='+str(id)))
+        data_this=data[id]
+        ismd5=False
+        if( not isavaible['success']):
+            print(isavaible['message'])
+            pass
         try:
             disbar(all,i,"[MD5]"+name)
             if not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1])):
@@ -149,7 +146,8 @@ def download_loop(tracks,trackIds):
                 errorinfo[id]=(name);
                 disbar(all,i,'[ERROR]'+name)
                 status_failed=status_failed+1;
-            #pass
+        except urllib.error.HTTPError as e:  # 此时是HTTPError
+            print(e.code)
         else:
             print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
             if not ismd5:
@@ -175,7 +173,7 @@ def set_mp3_info(name,artist,file,adl,type,all,i):
     if isJunkInfo:
         disbar(1,0,"Setting up mp3 info")
         print()
-    disbar(all,i,'[COPYING]'+name)
+    disbar(all,i,'[Copying]'+name)
     shutil.copy(file,dir_end)
     tag = id3.Tag()
     tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+type);    
