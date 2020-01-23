@@ -56,8 +56,8 @@ def validateTitle(title):
         disbar(2,1,"Validating Title")
         print()
     return new_title
-def getFilename(name,artist,typea):       
-    return dir_temp +validateTitle(name)+' - '+validateTitle(artist)+"." + str(typea)
+def getFilename(name,artist,typea,id):       
+    return dir_temp +validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"." + str(typea)
 def GetFileMd5(filename):
     if not os.path.isfile(filename):
         return
@@ -118,17 +118,17 @@ def download_loop(tracks,trackIds):
         ismd5=False
         try:
             disbar(all,i,"[MD5 SUM]"+name)
-            if not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1])):
+            if not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1],id)):
                 disbar(all,i,'[Download]'+name)
                 isavaible=resolve_json(fetch_api('/check/music?id='+str(id)))
                 if( not isavaible['success']):
                     print(isavaible)
                     pass
-                download(data_this[0],getFilename(name,artist,data_this[1]));
+                download(data_this[0],getFilename(name,artist,data_this[1],id));
             else:
                 disbar(all,i,'[MD5 PASS]'+name)
                 ismd5=True;
-            set_mp3_info(name,artist,getFilename(name,artist,data_this[1]),adl,data_this[1],all,i);
+            set_mp3_info(name,artist,getFilename(name,artist,data_this[1],id),adl,data_this[1],all,i,id);
             disbar(all,i,'[Processed]"'+name+'"')
         except urllib.error.HTTPError as e: 
             print(e.code)
@@ -151,24 +151,27 @@ def download_loop(tracks,trackIds):
             disbar(all,i,'[SUCCESS]'+name+" "+str(data_this[1]))
             files[id]=(name,data_this,dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(data_this[1]));                   
             if islog:
-                status_success=status_success+1;
-        i=i+1;
+                status_success=status_success+1
+        i=i+1
     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
     if islog:
         print(Style.BRIGHT+long_Str_setter("-",os.get_terminal_size().columns))
         print("All " + str(all) + "; "+Fore.GREEN+"Succeed " + str(status_success) + "; "+Fore.RED+"Failed "+ str(status_failed)+";"+Fore.WHITE)
         if not status_failed == 0:
             print("Error:",Fore.RED,errorinfo,Fore.WHITE)
-        print("Success:",Fore.GREEN,files,Fore.WHITE)
+        if isverbose:
+            print("Success:",Fore.GREEN,str(files),Fore.WHITE)
+        else:
+            print("Success:",Fore.GREEN,str(files)[:25],"....",Fore.WHITE)
     return
-def set_mp3_info(name,artist,file,adl,type,all,i): 
+def set_mp3_info(name,artist,file,adl,type,all,i,id): 
     if isJunkInfo:
         disbar(1,0,"Setting up mp3 info")
         print()
     disbar(all,i,'[Copying]'+name)
     shutil.copy(file,dir_end)
     tag = id3.Tag()
-    tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+type);    
+    tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type);    
     tag.artist = artist;        
     tag.title = name;
     tag.album=adl;   
