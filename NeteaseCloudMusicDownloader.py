@@ -92,12 +92,14 @@ def download(url,save):
 def download_loop(tracks,trackIds): 
     files = {}
     if islog:
-        status_success = 0;
-        status_failed = 0;
-        errorinfo = {};
-    all = len(tracks);
-    i = 0;
-    s = "";
+        status_success = 0
+        status_failed = 0
+        errorinfo = {}
+        status_success_cache = 0
+        status_success_download = 0
+    all = len(tracks)
+    i = 0
+    s = ""
     for ids in trackIds:
         s = s +"," + str(ids['id']);
     s = s[1:];
@@ -124,9 +126,11 @@ def download_loop(tracks,trackIds):
                     continue
                 disbar(all,i,'[DOWNLOAD]'+name)
                 download(data_this[0],getFilename(name,artist,data_this[1],id));
+                status_success_download += 1
             else:
                 disbar(all,i,'[MD5 PASS]'+name)
                 ismd5=True;
+                status_success_cache += 1
             set_mp3_info(name,artist,getFilename(name,artist,data_this[1],id),adl,data_this[1],all,i,id);
         except IOError as d :
             if islog:
@@ -151,7 +155,7 @@ def download_loop(tracks,trackIds):
     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
     if islog:
         print(Style.BRIGHT+long_Str_setter("-",os.get_terminal_size().columns))
-        print("All " + str(all) + "; "+Fore.GREEN+"Succeed " + str(status_success) + "; "+Fore.RED+"Failed "+ str(status_failed)+";"+Fore.WHITE)
+        print("All " + str(all) + "; "+Fore.GREEN+"Succeed " + str(status_success) +Fore.WHITE+":("+Fore.CYAN+"Cache:"+str(status_success_cache)+Fore.WHITE+","+Fore.GREEN+"Download:"+str(status_success_download) +Fore.WHITE +"); "+Fore.RED+"Failed "+ str(status_failed)+";"+Fore.WHITE)
         if not status_failed == 0:
             print("Error:",Fore.RED,errorinfo,Fore.WHITE)
         if isverbose:
