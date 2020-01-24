@@ -127,6 +127,7 @@ def download_loop(tracks,trackIds):
         try:
             disbar(all,i,"[MD5 SUM]"+name)
             if data_this[2] == None or not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1],id)):
+                disbar(all,i,"[CHECK]"+name)
                 isavaible=resolve_json(fetch_api('/check/music?id='+str(id)))
                 if not isavaible['success']:
                     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
@@ -135,7 +136,7 @@ def download_loop(tracks,trackIds):
                     disbar(all,i,'[ERROR]'+name)
                     status_failed=status_failed+1;
                     continue
-                disbar(all,i,'[Download]'+name)
+                disbar(all,i,'[DOWNLOAD]'+name)
                 download(data_this[0],getFilename(name,artist,data_this[1],id));
             else:
                 disbar(all,i,'[MD5 PASS]'+name)
@@ -176,7 +177,7 @@ def set_mp3_info(name,artist,file,adl,type,all,i,id):
     if isJunkInfo:
         disbar(1,0,"Setting up mp3 info")
         print()
-    disbar(all,i,'[Copying]'+name)
+    disbar(all,i,'[COPY]'+name)
     shutil.copy(file,dir_end)
     tag = id3.Tag()
     tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type);    
@@ -188,11 +189,21 @@ def set_mp3_info(name,artist,file,adl,type,all,i,id):
 
 def main():
     if islog:
-        print(Style.BRIGHT+"Getting PlayList")
+        print(Style.BRIGHT+"Getting PlayList",end=' ')
     get = get_playlist(cloud_music_playlist)
     if islog:
-        print("Getting Tracks")
+        if not isverbose:
+            print(str(get)[:50],"...")
+        else:
+            print(str(get))
+    if islog:
+        print("Getting Tracks",end=' ')
     tracks = get_tracks_info(get)
+    if islog:
+        if not isverbose:
+            print(str(tracks)[:50],"...")
+        else:
+            print(str(tracks))
     list = ""
     if islog:
         print("All " + str(len(tracks)) + " musics" )    
