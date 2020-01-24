@@ -10,3 +10,4 @@ request
 setuptools
 six
 ffmpeg-python
+requests

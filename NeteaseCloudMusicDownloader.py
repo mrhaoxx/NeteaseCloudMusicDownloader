@@ -1,6 +1,7 @@
 #!/usr/bin/python
-from urllib import request
+import requests
 from urllib import parse
+from urllib import request
 import urllib.error
 from eyed3 import id3
 from time import sleep
@@ -12,6 +13,7 @@ import time
 import re
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
+requests.packages.urllib3.disable_warnings()
 # Config
 # Api
 cloud_music_api = 'https://163musicapi.star-home.top:4430'
@@ -63,28 +65,32 @@ def getFilename(name,artist,typea,id):
 def GetFileMd5(filename):
     if not os.path.isfile(filename):
         return
-    if isverbose:
-        a = os.path.getsize(filename)
-        n = 0
-    myhash = hashlib.md5()
-    f = open(filename,'rb')   
-    while True:
-        b = f.read(8096)
+    try:
         if isverbose:
-            n = n+8096
-            disbar(a,n,"[MD5] Calculating")
-        if not b :
-           break
-        myhash.update(b)
-    f.close()
-    return myhash.hexdigest()
+            a = os.path.getsize(filename)
+            n = 0
+        myhash = hashlib.md5()
+        f = open(filename,'rb')   
+        while True:
+            b = f.read(8096)
+            if isverbose:
+                n = n+8096
+                disbar(a,n,"[MD5] Calculating")
+            if not b :
+                break
+            myhash.update(b)
+        f.close()
+        return myhash.hexdigest()
+    except:
+        return str(0)
 def fetch_api(add):
     if isverbose:
         print("Fetching API:" + add[:25] + "...")
-    f = request.urlopen(cloud_music_api + add);
-    return f.read().decode('utf-8');
+    f = requests.get(cloud_music_api + add,verify=False);
+    return f.json()
 def resolve_json(str):
-    return json.loads(str);
+    #return json.loads(str);
+    return str;
 def get_playlist(playlist):
     return resolve_json(fetch_api("/playlist/detail?id="+playlist))['playlist'];
 def get_tracks_info(plerlist):
@@ -120,20 +126,21 @@ def download_loop(tracks,trackIds):
         ismd5=False
         try:
             disbar(all,i,"[MD5 SUM]"+name)
-            if not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1],id)):
-                disbar(all,i,'[Download]'+name)
+            if data_this[2] == None or not data_this[2] == GetFileMd5(getFilename(name,artist,data_this[1],id)):
                 isavaible=resolve_json(fetch_api('/check/music?id='+str(id)))
-                if( not isavaible['success']):
-                    print(isavaible)
-                    pass
+                if not isavaible['success']:
+                    print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
+                    print(Style.BRIGHT+'['+Fore.RED + 'ERROR'+Style.RESET_ALL+Style.BRIGHT+']'+name+' ' + isavaible['message']);
+                    errorinfo[id]=(name,data_this,isavaible['message']);
+                    disbar(all,i,'[ERROR]'+name)
+                    status_failed=status_failed+1;
+                    continue
+                disbar(all,i,'[Download]'+name)
                 download(data_this[0],getFilename(name,artist,data_this[1],id));
             else:
                 disbar(all,i,'[MD5 PASS]'+name)
                 ismd5=True;
             set_mp3_info(name,artist,getFilename(name,artist,data_this[1],id),adl,data_this[1],all,i,id);
-            disbar(all,i,'[Processed]"'+name+'"')
-        except urllib.error.HTTPError as e: 
-            print(e.code)
         except IOError as d :
             if islog:
                 print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
@@ -141,7 +148,6 @@ def download_loop(tracks,trackIds):
                 errorinfo[id]=(name,data_this,d.strerror);
                 disbar(all,i,Style.BRIGHT+Fore.RED +'[ERROR]'+name+Style.RESET_ALL)
                 status_failed=status_failed+1;
-        
         else:
             print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
             if not ismd5:
