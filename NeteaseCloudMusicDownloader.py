@@ -31,19 +31,17 @@ from colorama import Fore, Style
 isverbose = islog and isverbose
 isJunkinfo = isJunkInfo and isverbose
 def id_to_url_type_dict(data_all):
-    if isJunkinfo:
-        disbar(1,0,"Coventing dict")
     dict = {}
     for x in data_all:
         dict[x['id']] = (x['url'],x['type'],x['md5'])
     return dict
 def long_Str_setter(delim,long):
-    a = 1;
+    a = 1
     b = ""
     while a < long:
-        a = a+1;
+        a = a+1
         b = b + delim
-    return b;
+    return b
 def disbar(total,now,msg):   
     if not islog:
         return;    
@@ -51,14 +49,8 @@ def disbar(total,now,msg):
     print((" {0}% "+(now+1).__str__() + "/" + total.__str__()+ " "+msg).format(round((now + 1) * 100/ total)), end="\r")
     return
 def validateTitle(title):
-    if isJunkinfo:
-        disbar(2,0,"Validating Title")
-        print()
     rstr = r"[\·\/\\\:\*\?\"\<\>\|]"
     new_title = re.sub(rstr, "_", title)
-    if isJunkinfo:
-        disbar(2,1,"Validating Title")
-        print()
     return new_title
 def getFilename(name,artist,typea,id):       
     return dir_temp +validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"." + str(typea)
@@ -90,13 +82,7 @@ def fetch_api(add):
     return f.json()
 def resolve_json(str):
     #return json.loads(str);
-    return str;
-def get_playlist(playlist):
-    return resolve_json(fetch_api("/playlist/detail?id="+playlist))['playlist'];
-def get_tracks_info(plerlist):
-    return plerlist['tracks'];
-def get_tracks_ids(plerlist):
-    return plerlist['trackIds'];
+    return str
 def download(url,save):
     if isverbose:
         print("Downloaded " + url +" to " + save)
@@ -190,7 +176,7 @@ def set_mp3_info(name,artist,file,adl,type,all,i,id):
 def main():
     if islog:
         print(Style.BRIGHT+"Getting PlayList",end=' ')
-    get = get_playlist(cloud_music_playlist)
+    get = resolve_json(fetch_api("/playlist/detail?id="+cloud_music_playlist))['playlist']
     if islog:
         if not isverbose:
             print(str(get)[:50],"...")
@@ -198,7 +184,7 @@ def main():
             print(str(get))
     if islog:
         print("Getting Tracks",end=' ')
-    tracks = get_tracks_info(get)
+    tracks = get['tracks']
     if islog:
         if not isverbose:
             print(str(tracks)[:50],"...")
@@ -207,7 +193,7 @@ def main():
     list = ""
     if islog:
         print("All " + str(len(tracks)) + " musics" )    
-    tracksIds = get_tracks_ids(get);
+    tracksIds = get['trackIds']
     if islog:
         print(Style.BRIGHT+long_Str_setter("-",os.get_terminal_size().columns))
         print("Starting download"+Style.RESET_ALL)
