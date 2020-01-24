@@ -48,7 +48,7 @@ def disbar(total,now,msg):
     if not islog:
         return;    
     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
-    print(("{0}% "+(now+1).__str__() + "/" + total.__str__()+ " "+msg).format(round((now + 1) * 100/ total)), end="\r")
+    print((" {0}% "+(now+1).__str__() + "/" + total.__str__()+ " "+msg).format(round((now + 1) * 100/ total)), end="\r")
     return
 def validateTitle(title):
     if isJunkinfo:
