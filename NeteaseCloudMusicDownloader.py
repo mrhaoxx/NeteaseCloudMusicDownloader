@@ -1,11 +1,11 @@
 #!/usr/bin/python
-import requests
 from urllib import parse
 from urllib import request
-import urllib.error
+from urllib import error
 from eyed3 import id3
 from time import sleep
 import shutil
+import requests
 import json
 import hashlib
 import os
@@ -21,6 +21,8 @@ cloud_music_playlist = '510113940'
 # Dir
 dir_temp="temp/"
 dir_end="music/"
+Enable_ORDER = True
+Clean_Music_Dir = True
 # Log
 islog = True
 isverbose = False
@@ -44,7 +46,7 @@ def long_Str_setter(delim,long):
     return b
 def disbar(total,now,msg):   
     if not islog:
-        return;    
+        return
     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
     print((" {0}% "+(now+1).__str__() + "/" + total.__str__()+ " "+msg).format(round((now + 1) * 100/ total)), end="\r")
     return
@@ -78,16 +80,16 @@ def GetFileMd5(filename):
 def fetch_api(add):
     if isverbose:
         print("Fetching API:" + add[:25] + "...")
-    f = requests.get(cloud_music_api + add,verify=False);
+    f = requests.get(cloud_music_api + add,verify=False)
     return f.json()
 def resolve_json(str):
-    #return json.loads(str);
+    #return json.loads(str)
     return str
 def download(url,save):
     if isverbose:
         print("Downloaded " + url +" to " + save)
-    request.urlretrieve(url, save);
-    return;
+    request.urlretrieve(url, save)
+    return
 
 def download_loop(tracks,trackIds): 
     files = {}
@@ -101,9 +103,9 @@ def download_loop(tracks,trackIds):
     i = 0
     s = ""
     for ids in trackIds:
-        s = s +"," + str(ids['id']);
-    s = s[1:];
-    data_all=resolve_json(fetch_api('/song/url?id='+s))['data'];  
+        s = s +"," + str(ids['id'])
+    s = s[1:]
+    data_all=resolve_json(fetch_api('/song/url?id='+s))['data']
     data=id_to_url_type_dict(data_all)
     for index in range(len(tracks)) :
         name=tracks[index]['name']
@@ -119,36 +121,36 @@ def download_loop(tracks,trackIds):
                 isavaible=resolve_json(fetch_api('/check/music?id='+str(id)))
                 if not isavaible['success']:
                     print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
-                    print(Style.BRIGHT+'['+Fore.RED + 'ERROR'+Style.RESET_ALL+Style.BRIGHT+']'+name+' ' + isavaible['message']);
-                    errorinfo[id]=(name,data_this,isavaible['message']);
+                    print(Style.BRIGHT+'['+Fore.RED + 'ERROR'+Style.RESET_ALL+Style.BRIGHT+']'+name+' ' + isavaible['message'])
+                    errorinfo[id]=(name,data_this,isavaible['message'])
                     disbar(all,i,'[ERROR]'+name)
-                    status_failed=status_failed+1;
+                    status_failed=status_failed+1
                     continue
                 disbar(all,i,'[DOWNLOAD]'+name)
-                download(data_this[0],getFilename(name,artist,data_this[1],id));
+                download(data_this[0],getFilename(name,artist,data_this[1],id))
                 status_success_download += 1
             else:
                 disbar(all,i,'[MD5 PASS]'+name)
-                ismd5=True;
+                ismd5=True
                 status_success_cache += 1
-            set_mp3_info(name,artist,getFilename(name,artist,data_this[1],id),adl,data_this[1],all,i,id);
+            set_mp3_info(name,artist,getFilename(name,artist,data_this[1],id),adl,data_this[1],all,i,id,index)
         except IOError as d :
             if islog:
                 print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
-                print(Style.BRIGHT+'['+Fore.RED + 'ERROR'+Style.RESET_ALL+Style.BRIGHT+']'+name);
-                errorinfo[id]=(name,data_this,d.strerror);
+                print(Style.BRIGHT+'['+Fore.RED + 'ERROR'+Style.RESET_ALL+Style.BRIGHT+']'+name)
+                errorinfo[id]=(name,data_this,d.strerror)
                 disbar(all,i,Style.BRIGHT+Fore.RED +'[ERROR]'+name+Style.RESET_ALL)
-                status_failed=status_failed+1;
+                status_failed=status_failed+1
         else:
             print(long_Str_setter(" ",os.get_terminal_size().columns), end="\r")
             if not ismd5:
                 if islog:
-                    print(Style.BRIGHT+'['+Fore.GREEN+'SUCCESS'+Fore.WHITE+']'+name +" "+Fore.YELLOW+str(data_this[1])+Style.RESET_ALL);
+                    print(Style.BRIGHT+'['+Fore.GREEN+'SUCCESS'+Fore.WHITE+']'+name +" "+Fore.YELLOW+str(data_this[1])+Style.RESET_ALL)
             else:
                 if islog:
-                    print(Style.BRIGHT+'['+Fore.GREEN+'SUCCESS'+Fore.WHITE+']['+Fore.CYAN+'Cached'+Fore.WHITE+']'+Style.RESET_ALL+Style.DIM+name+" "+Fore.YELLOW+str(data_this[1])+Style.RESET_ALL);
+                    print(Style.BRIGHT+'['+Fore.GREEN+'SUCCESS'+Fore.WHITE+']['+Fore.CYAN+'Cached'+Fore.WHITE+']'+Style.RESET_ALL+Style.DIM+name+" "+Fore.YELLOW+str(data_this[1])+Style.RESET_ALL)
             disbar(all,i,'[SUCCESS]'+name+" "+str(data_this[1]))
-            files[id]=(name,data_this,dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(data_this[1]));                   
+            files[id]=(name,data_this,dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(data_this[1]))                   
             if islog:
                 status_success=status_success+1
         i=i+1
@@ -163,18 +165,24 @@ def download_loop(tracks,trackIds):
         else:
             print("Success:",Fore.GREEN,str(files)[:25],"....",Fore.WHITE)
     return
-def set_mp3_info(name,artist,file,adl,type,all,i,id): 
+def set_mp3_info(name,artist,file,adl,type,all,i,id,index): 
     if isJunkInfo:
         disbar(1,0,"Setting up mp3 info")
         print()
     disbar(all,i,'[COPY]'+name)
-    shutil.copy(file,dir_end)
+    if Enable_ORDER:
+        shutil.copy(file,dir_end+str(index)+"-"+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type)
+    else:
+        shutil.copy(file,dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type)
     tag = id3.Tag()
-    tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type);    
-    tag.artist = artist;        
-    tag.title = name;
-    tag.album=adl;   
-    tag.save(encoding='utf-8');
+    if Enable_ORDER:
+        tag.parse(dir_end+str(index)+"-"+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type)
+    else:
+        tag.parse(dir_end+validateTitle(name)+' - '+validateTitle(artist)+"."+str(id)+"."+type)        
+    tag.artist = artist        
+    tag.title = name
+    tag.album=adl   
+    tag.save(encoding='utf-8')
     return
 
 def main():
@@ -194,14 +202,13 @@ def main():
             print(str(tracks)[:50],"...")
         else:
             print(str(tracks))
-    list = ""
     if islog:
         print("All " + str(len(tracks)) + " musics" )    
     tracksIds = get['trackIds']
     if islog:
         print(Style.BRIGHT+long_Str_setter("-",os.get_terminal_size().columns))
         print("Starting download"+Style.RESET_ALL)
-    download_loop(tracks,tracksIds);
+    download_loop(tracks,tracksIds)
     if islog:
         print(Style.BRIGHT+long_Str_setter("-",os.get_terminal_size().columns)+Style.RESET_ALL)
     return
@@ -209,6 +216,8 @@ def main():
 if isverbose:
     disbar(5,0,"Lauching")
     print()
+if Clean_Music_Dir:
+    shutil.rmtree(dir_end)
 if not os.path.exists(dir_temp):
     os.mkdir(dir_temp)
 if not os.path.exists(dir_end):
