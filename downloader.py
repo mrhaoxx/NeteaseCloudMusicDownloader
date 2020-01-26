@@ -17,15 +17,7 @@ requests.packages.urllib3.disable_warnings()
 def GetFileMd5(filename):
     if not os.path.isfile(filename):
         return
-    myhash = hashlib.md5()
-    f = open(filename, 'rb')
-    while True:
-        b = f.read(8096)
-        if not b:
-            break
-        myhash.update(b)
-    f.close()
-    return myhash.hexdigest()
+    return hashlib.md5(open(filename, 'rb').read()).hexdigest()
 
 
 def validateTitle(title):
@@ -45,7 +37,7 @@ def empty(*value):
     return
 
 
-def status(self, s, n, m):
+def status(s, n, m):
     if s == 'SUCCESS':
         print(Style.BRIGHT + '[' + Fore.GREEN + 'SUCCESS' + Style.RESET_ALL + Style.BRIGHT + ']', n,
               Fore.YELLOW + m + Style.RESET_ALL)
@@ -58,7 +50,7 @@ def status(self, s, n, m):
             + Style.RESET_ALL, Style.DIM + n, Fore.YELLOW + m + Style.RESET_ALL)
 
 
-def verbose(self, info):
+def verbose(info):
     print(Style.BRIGHT, info, Style.RESET_ALL)
 
 
@@ -70,8 +62,8 @@ class Downloader:
     tmp_dir: str = 'cache/'
     api_url: str = 'https://163musicapi.star-home.top:4430'
     callback_progress_BAR = empty
-    callback_progress_STATUS = status
-    callback_progress_VERBOSE = verbose
+    callback_progress_STATUS = empty
+    callback_progress_VERBOSE = empty
     callback_progress_DETAILED = empty
     callback_start_list_info = empty
     callback_end_list_info = empty
@@ -93,6 +85,11 @@ class Downloader:
         self.api_url = api
         self.tmp_dir = tmp
         self.playlist = pl
+
+    def setSV(self, fuuncS, funcV):
+        self.callback_progress_STATUS = fuuncS
+        self.callback_progress_VERBOSE = funcV
+        return self
 
     def fetch_api(self, add):
         self.callback_progress_VERBOSE("Fetching API:" + add[:50] + "...")
@@ -119,7 +116,6 @@ class Downloader:
         for index in range(_all):
             name = self.tracks[index]['name']
             artist = self.tracks[index]['ar'][0]['name']
-            adl = self.tracks[index]['al']['name']
             mid = self.tracks[index]['id']
             data_this = data[mid]
             is_md5 = False
@@ -229,6 +225,17 @@ class Downloader:
         return {'success': self.files, 'failed': self.error_info}
 
     def run(self):
+        self.status_success: int = 0
+        self.status_failed: int = 0
+        self.error_info: dict = {}
+        self.files: dict = {}
+        self.status_success_cache: int = 0
+        self.status_success_download: int = 0
+        self.tracks: dict = None
+        self.trackIds: dict = None
+        self.status: str = ""
+        self.is_ready = False
+        self.playlist_info: dict = {}
         if not os.path.exists(self.tmp_dir):
             os.makedirs(self.tmp_dir)
         self.callback_progress_VERBOSE('Processing ' + str(self.playlist))
@@ -248,4 +255,3 @@ class Downloader:
         self.callback_end_list_info()
         self.callback_progress_VERBOSE("Starting download")
         return self.download_loop()
-

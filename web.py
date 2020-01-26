@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request, send_file
 
-from downloader import Downloader, musics
+from downloader import Downloader, musics, status, verbose
 
 app = Flask(__name__)
 
@@ -19,7 +19,7 @@ def create_playlist():
         return jsonify({'code': 400, 'msg': 'Bad Request: No id provided'}), 200
     if playlists.__contains__(request.json['id']):
         return jsonify({'code': 200, 'msg': 'Successfully updated', 'info': playlists[request.json['id']].run()}), 200
-    new_downloader = Downloader("/cache/", "http://abcdelf.top:3000", request.json['id'])
+    new_downloader = Downloader("/cache/", "http://abcdelf.top:3000", request.json['id']).setSV(status, verbose)
     t = new_downloader.run()
     playlists[request.json['id']] = new_downloader
     return jsonify({'code': 200, 'msg': 'Successfully added', 'info': t}), 200
