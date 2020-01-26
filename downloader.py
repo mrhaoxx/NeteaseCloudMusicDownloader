@@ -44,7 +44,7 @@ def id_to_url_type_dict(data_all):
 
 class Downloader:
     """Backend of The tools"""
-    tmp_dir: str = 'tmp/'
+    tmp_dir: str = 'cache/'
     end_dir: str = 'music/'
     api_url: str = 'https://163musicapi.star-home.top:4430'
     is_order: bool = True

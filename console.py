@@ -22,6 +22,7 @@ def disbar(total, now, msg):
 
 
 def status(s, n, m):
+    print(Style.BRIGHT + long_Str_setter(" ", 100) + Style.RESET_ALL, end='\r')
     if s == 'SUCCESS':
         print(Style.BRIGHT + '[' + Fore.GREEN + 'SUCCESS' + Style.RESET_ALL + Style.BRIGHT + ']', n,
               Fore.YELLOW + m + Style.RESET_ALL)
@@ -58,7 +59,7 @@ def download_end():
 if __name__ == '__main__':
     cloud_music_api = 'https://163musicapi.star-home.top:4430'
     cloud_music_playlist = ['510113940']
-    dir_temp = "tmp/"
+    dir_temp = "cache/"
     dir_end = "music/"
     Enable_ORDER = False
     Clean_Music_Dir = False
@@ -89,7 +90,7 @@ if __name__ == '__main__':
                 print("-v => Enable Verbose Log output")
                 print("-c => Clear The music dir before downloading")
                 print("-o => Order the musics")
-                print("-T/tmp => Set tmp dir to '/tmp'")
+                print("-T/cache => Set cache dir to '/cache'")
                 print("-M/music => Set music dir to '/music'")
                 # noinspection SpellCheckingInspection
                 print(
