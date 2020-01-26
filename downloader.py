@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import codecs
 import hashlib
 import os
 import re
@@ -140,13 +141,11 @@ class Downloader:
                     self.download(data_this[0], self.getFilename(name, artist, data_this[1], mid))
                     self.callback_progress_BAR(_all, i, '[LYRIC]' + name)
                     lyric = self.fetch_api('/lyric?id=' + str(mid))
-                    f = open(self.getFilename(name, artist, 'lrc', mid), 'w')
+                    f = codecs.open(self.getFilename(name, artist, 'lrc', mid), 'w', "utf-8")
                     try:
-                        f.write(str(bytes(lyric['lrc']['lyric']).decode('gbk', 'ignore').encode('utf-8')))
+                        f.write(lyric['lrc']['lyric'])
                     except KeyError:
                         f.write("")
-                    except TypeError:
-                        f.write(lyric['lrc']['lyric'])
                     f.close()
                     self.status_success_download += 1
                 else:
