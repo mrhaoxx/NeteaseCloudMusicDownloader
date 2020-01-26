@@ -71,10 +71,6 @@ class Downloader:
         self.end_dir = end
         self.is_order = iso
         self.playlist = pl
-        if not os.path.exists(self.tmp_dir):
-            os.mkdir(self.tmp_dir)
-        if not os.path.exists(self.end_dir):
-            os.mkdir(self.end_dir)
 
     def setCallBackProgressFunction(self, funcBAR, funcVERBOSE, funcSTATUS, funcDETAILED):
         self.callback_progress_BAR = funcBAR
@@ -142,12 +138,22 @@ class Downloader:
                         self.callback_progress_STATUS('ERROR', name, 'API ERROR')
                         continue
                     self.download(data_this[0], self.getFilename(name, artist, data_this[1], mid))
+                    self.callback_progress_BAR(_all, i, '[LYRIC]' + name)
+                    lyric = self.fetch_api('/lyric?id=' + str(mid))
+                    f = open(self.getFilename(name, artist, 'lrc', mid), 'w')
+                    try:
+                        f.write(str(bytes(lyric['lrc']['lyric']).decode('gbk', 'ignore').encode('utf-8')))
+                    except KeyError:
+                        f.write("")
+                    except TypeError:
+                        f.write(lyric['lrc']['lyric'])
+                    f.close()
                     self.status_success_download += 1
                 else:
                     self.callback_progress_BAR(_all, i, '[MD5 PASS]' + name)
                     is_md5 = True
                     self.status_success_cache += 1
-                self.set_mp3_info(name, artist, self.getFilename(name, artist, data_this[1], mid), adl, data_this[1],
+                self.set_mp3_info(name, artist, (name, artist, data_this[1], mid), adl, data_this[1],
                                   _all,
                                   i,
                                   mid,
@@ -186,14 +192,23 @@ class Downloader:
     def set_mp3_info(self, name, artist, file, adl, music_type, all_musics, i, music_id, index):
         self.callback_progress_BAR(all_musics, i, '[COPY]' + name)
         if self.is_order:
-            shutil.copy(file,
+            shutil.copy(self.getFilename(file[0], file[1], file[2], file[3]),
                         self.end_dir + str(index + 1) + "-" + validateTitle(name) + ' - ' + validateTitle(
                             artist) + "." +
                         str(music_id) + "." + music_type)
         else:
-            shutil.copy(file,
+            shutil.copy(self.getFilename(file[0], file[1], file[2], file[3]),
                         self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id) + "."
                         + music_type)
+        if self.is_order:
+            shutil.copy(self.getFilename(file[0], file[1], 'lrc', file[3]),
+                        self.end_dir + str(index + 1) + "-" + validateTitle(name) + ' - ' + validateTitle(
+                            artist) + "." +
+                        str(music_id) + ".lrc")
+        else:
+            shutil.copy(self.getFilename(file[0], file[1], 'lrc', file[3]),
+                        self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id)
+                        + ".lrc")
         # tag = id3.Tag()
         # if self.is_order:
         #     tag.parse(self.end_dir + str(index+1) + "-" + validateTitle(name) + ' - ' + validateTitle(artist)
@@ -209,9 +224,9 @@ class Downloader:
 
     def run(self):
         if not os.path.exists(self.tmp_dir):
-            os.mkdir(self.tmp_dir)
+            os.makedirs(self.tmp_dir)
         if not os.path.exists(self.end_dir):
-            os.mkdir(self.end_dir)
+            os.makedirs(self.end_dir)
         self.callback_progress_VERBOSE('Processing ' + str(self.playlist))
         self.callback_start_list_info()
         self.callback_progress_VERBOSE("Getting PlayList")
