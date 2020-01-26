@@ -65,26 +65,26 @@ if __name__ == '__main__':
     is_verbose = False
     is_cleaned_list = False
     for i in sys.argv[1:]:
-        if i[0] is '-':
-            if i[1:] is 'v':
+        if i[0] == '-':
+            if i[1:] == 'v':
                 is_verbose = True
                 continue
-            if i[1] is 'A':
+            if i[1] == 'A':
                 cloud_music_api = i[2:]
                 continue
-            if i[1:] is 'c':
+            if i[1:] == 'c':
                 Clean_Music_Dir = True
                 continue
-            if i[1:] is 'o':
+            if i[1:] == 'o':
                 Enable_ORDER = True
                 continue
-            if i[1:] is 'T':
+            if i[1:] == 'T':
                 dir_temp = i[2:]
                 continue
-            if i[1:] is 'M':
+            if i[1:] == 'M':
                 dir_end = i[2:]
                 continue
-            if i[1:] is 'h':
+            if i[1:] == 'h':
                 print(sys.argv[0] + ' Usage:')
                 print("-v => Enable Verbose Log output")
                 print("-c => Clear The music dir before downloading")
