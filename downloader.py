@@ -212,7 +212,7 @@ class Downloader:
         self.callback_start_list_info()
         self.callback_progress_VERBOSE("Getting PlayList")
         get = self.fetch_api("/playlist/detail?id=" + self.playlist)
-        if get['code'] is not 200:
+        if get['code'] != 200:
             self.callback_progress_VERBOSE('Error ' + get['msg'])
             return {}
         get = get['playlist']
