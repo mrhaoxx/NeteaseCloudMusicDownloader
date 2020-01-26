@@ -163,9 +163,15 @@ class Downloader:
                 else:
                     self.callback_progress_STATUS('CACHED', name, str(data_this[1]))
                 self.callback_progress_BAR(_all, i, '[SUCCESS]' + name + " " + str(data_this[1]))
-                self.files[mid] = (name, data_this,
-                                   self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(
-                                       data_this[1]))
+                if self.is_order:
+                    self.files[mid] = (name, data_this,
+                                       self.end_dir + str(index + 1) + "-" + validateTitle(
+                                           name) + ' - ' + validateTitle(artist) + "." + str(
+                                           data_this[1]))
+                else:
+                    self.files[mid] = (name, data_this,
+                                       self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(
+                                           data_this[1]))
                 self.status_success += 1
             i += 1
         self.callback_progress_VERBOSE("All " + str(_all) + "; Succeed " + str(self.status_success) + ":(Cache:" + str(
@@ -181,7 +187,8 @@ class Downloader:
         self.callback_progress_BAR(all_musics, i, '[COPY]' + name)
         if self.is_order:
             shutil.copy(file,
-                        self.end_dir + str(index) + "-" + validateTitle(name) + ' - ' + validateTitle(artist) + "." +
+                        self.end_dir + str(index + 1) + "-" + validateTitle(name) + ' - ' + validateTitle(
+                            artist) + "." +
                         str(music_id) + "." + music_type)
         else:
             shutil.copy(file,
@@ -189,7 +196,7 @@ class Downloader:
                         + music_type)
         # tag = id3.Tag()
         # if self.is_order:
-        #     tag.parse(self.end_dir + str(index) + "-" + validateTitle(name) + ' - ' + validateTitle(artist)
+        #     tag.parse(self.end_dir + str(index+1) + "-" + validateTitle(name) + ' - ' + validateTitle(artist)
         #               + "." + str(music_id) + "." + music_type)
         # else:
         #     tag.parse(self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id) +
