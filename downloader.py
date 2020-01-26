@@ -208,6 +208,10 @@ class Downloader:
         return
 
     def run(self):
+        if not os.path.exists(self.tmp_dir):
+            os.mkdir(self.tmp_dir)
+        if not os.path.exists(self.end_dir):
+            os.mkdir(self.end_dir)
         self.callback_progress_VERBOSE('Processing ' + str(self.playlist))
         self.callback_start_list_info()
         self.callback_progress_VERBOSE("Getting PlayList")
