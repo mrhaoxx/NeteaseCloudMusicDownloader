@@ -11,3 +11,4 @@ setuptools
 six
 ffmpeg-python
 requests
+flask
