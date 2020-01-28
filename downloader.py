@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import codecs
 import hashlib
+import json
 import os
 import re
 import ssl
@@ -28,13 +29,17 @@ def validateTitle(title):
 
 def id_to_url_type_dict(data_all):
     dicts = {}
-    for x in data_all:
-        dicts[x['id']] = (x['url'], x['type'], x['md5'])
+    for _x in data_all:
+        dicts[_x['id']] = (_x['url'], _x['type'], _x['md5'])
     return dicts
 
 
 def empty(*value):
-    return
+    return value
+
+
+def delete(d: dict, n):
+    d.pop(n)
 
 
 def status(s, n, m):
@@ -54,7 +59,22 @@ def verbose(info):
     print(Style.BRIGHT, info, Style.RESET_ALL)
 
 
-musics = {}
+musics = {'nums': 0, 'list': {}, '163map': {}}
+
+if not os.path.isfile('musics.json'):
+    x = open('musics.json', "w")
+    x.write(json.dumps(musics))
+    x.flush()
+    x.close()
+
+hdm = open('musics.json', "r+")
+
+
+def save():
+    hdm.seek(0)
+    hdm.truncate()
+    hdm.write(json.dumps(musics))
+    hdm.flush()
 
 
 class Downloader:
@@ -98,9 +118,9 @@ class Downloader:
     def getFilename(self, name, artist, _type, _id):
         return self.tmp_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(_id) + "." + str(_type)
 
-    def download(self, url, save):
-        self.callback_progress_VERBOSE("Downloading " + str(url) + " to " + str(save))
-        request.urlretrieve(str(url), str(save))
+    def download(self, url, _save):
+        self.callback_progress_VERBOSE("Downloading " + str(url) + " to " + str(_save))
+        request.urlretrieve(str(url), str(_save))
         return
 
     def download_loop(self):
@@ -118,6 +138,11 @@ class Downloader:
             artist = self.tracks[index]['ar'][0]['name']
             mid = self.tracks[index]['id']
             data_this = data[mid]
+            if mid.__str__() in musics['163map']:
+                self.playlist_info[index] = musics['list'][musics['163map'][mid.__str__()].__str__()]
+                self.status_success += 1
+                self.files.append((name, musics['list'][musics['163map'][mid.__str__()]]))
+                continue
             is_md5 = False
             try:
                 self.callback_progress_BAR(_all, i, "[MD5 SUM]" + name)
@@ -127,40 +152,30 @@ class Downloader:
                     is_available = self.fetch_api('/check/music?id=' + str(mid))
                     if not is_available['success']:
                         self.callback_progress_STATUS('ERROR', name, is_available['message'])
-                        self.error_info[mid] = (name, data_this, is_available['message'])
+                        self.error_info[mid] = (name, is_available['message'])
                         self.callback_progress_BAR(_all, i, '[ERROR]' + name)
                         self.status_failed += 1
-                        musics[mid] = {
-                            'status': False,
-                            'name': name,
-                            'msg': is_available['message']
-                        }
-                        self.playlist_info[index] = {
-                            'status': musics[mid],
-                            'author': self.tracks[index]['ar'],
-                            'id': mid,
-                            'name': name,
-                            'album': self.tracks[index]['al'],
-                        }
+                        # self.playlist_info[index] = {
+                        #     'status': Fa,
+                        #     'author': self.tracks[index]['ar'],
+                        #     'id': mid,
+                        #     'name': name,
+                        #     'album': self.tracks[index]['al'],
+                        # }
                         continue
                     self.callback_progress_BAR(_all, i, '[DOWNLOAD]' + name)
                     if data_this[0] is None or data_this[1] is None:
-                        self.error_info[mid] = (name, data_this, 'API ERROR')
+                        self.error_info[mid] = (name, 'API ERROR')
                         self.status_failed += 1
                         self.callback_progress_BAR(_all, i, '[ERROR]' + name)
                         self.callback_progress_STATUS('ERROR', name, 'API ERROR')
-                        musics[mid] = {
-                            'status': False,
-                            'name': name,
-                            'msg': 'API ERROR'
-                        }
-                        self.playlist_info[index] = {
-                            'status': musics[mid],
-                            'author': self.tracks[index]['ar'],
-                            'id': mid,
-                            'name': name,
-                            'album': self.tracks[index]['al'],
-                        }
+                        # self.playlist_info[index] = {
+                        #     'status': musics[mid],
+                        #     'author': self.tracks[index]['ar'],
+                        #     'id': mid,
+                        #     'name': name,
+                        #     'album': self.tracks[index]['al'],
+                        # }
                         continue
                     self.download(data_this[0], self.getFilename(name, artist, data_this[1], mid))
                     self.callback_progress_BAR(_all, i, '[LYRIC]' + name)
@@ -178,43 +193,48 @@ class Downloader:
                     self.status_success_cache += 1
             except IOError as d:
                 self.callback_progress_STATUS('ERROR', name, d.strerror)
-                self.error_info[mid] = (name, data_this, d.strerror)
+                self.error_info[mid] = (name, d.strerror)
                 self.callback_progress_BAR(_all, i, '[ERROR]' + name)
                 self.status_failed += 1
-                musics[mid] = {
-                    'status': False,
-                    'name': name,
-                    'msg': d.strerror
-                }
-                self.playlist_info[index] = {
-                    'status': musics[mid],
-                    'author': self.tracks[index]['ar'],
-                    'id': mid,
-                    'name': name,
-                    'album': self.tracks[index]['al'],
-                }
+                # self.playlist_info[index] = {
+                #     'status': musics[mid],
+                #     'author': self.tracks[index]['ar'],
+                #     'id': mid,
+                #     'name': name,
+                #     'album': self.tracks[index]['al'],
+                # }
             else:
                 if not is_md5:
                     self.callback_progress_STATUS('SUCCESS', name, str(data_this[1]))
                 else:
                     self.callback_progress_STATUS('CACHED', name, str(data_this[1]))
-                musics[mid] = {
-                    'status': True,
-                    'name': name,
-                    'type': data_this[1],
-                    'file': self.getFilename(name, artist, data_this[1], mid),
-                    'ly_file': self.getFilename(name, artist, 'lrc', mid),
-                }
-                self.playlist_info[index] = {
-                    'status': musics[mid],
-                    'author': self.tracks[index]['ar'],
-                    'id': mid,
-                    'name': name,
-                    'album': self.tracks[index]['al'],
-                }
-                self.files[mid] = (name, data_this, musics[mid])
+                if mid not in musics['163map']:
+                    musics['163map'][mid.__str__()] = musics['nums'].__str__()
+                    for _x in self.tracks[index]['ar']:
+                        delete(_x, 'id')
+                        delete(_x, 'alias')
+                        delete(_x, 'tns')
+                    delete(self.tracks[index]['al'], 'id')
+                    delete(self.tracks[index]['al'], 'pic')
+                    delete(self.tracks[index]['al'], 'picUrl')
+                    delete(self.tracks[index]['al'], 'tns')
+                    musics['list'][musics['nums'].__str__()] = {
+                        'status': True,
+                        'name': name,
+                        'type': data_this[1],
+                        'file': self.getFilename(name, artist, data_this[1], mid),
+                        'ly_file': self.getFilename(name, artist, 'lrc', mid),
+                        'id': musics['nums'],
+                        '163id': mid,
+                        'author': self.tracks[index]['ar'],
+                        'album': self.tracks[index]['al'],
+                    }
+                    musics['nums'] += 1
+                self.playlist_info[index] = musics['list'][musics['163map'][mid.__str__()].__str__()]
+                self.files.append((name, musics['list'][musics['163map'][mid.__str__()]]))
                 self.callback_progress_BAR(_all, i, '[SUCCESS]' + name + " " + str(data_this[1]))
                 self.status_success += 1
+
             i += 1
         self.callback_progress_VERBOSE("All " + str(_all) + "; Succeed " + str(self.status_success) + ":(Cache:" + str(
             self.status_success_cache) + ",Download:" + str(
@@ -222,17 +242,18 @@ class Downloader:
             self.status_failed) + ";")
         self.callback_progress_VERBOSE('End ' + str(self.playlist))
         self.callback_end_download()
+        save()
         return {'success': self.files, 'failed': self.error_info}
 
     def run(self):
         self.status_success: int = 0
         self.status_failed: int = 0
         self.error_info: dict = {}
-        self.files: dict = {}
+        self.files: list = []
         self.status_success_cache: int = 0
         self.status_success_download: int = 0
-        self.tracks: dict = None
-        self.trackIds: dict = None
+        self.tracks: dict = {}
+        self.trackIds: dict = {}
         self.status: str = ""
         self.is_ready = False
         self.playlist_info: dict = {}
@@ -254,4 +275,5 @@ class Downloader:
         self.trackIds = get['trackIds']
         self.callback_end_list_info()
         self.callback_progress_VERBOSE("Starting download")
+        save()
         return self.download_loop()
