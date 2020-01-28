@@ -100,7 +100,7 @@ def get_task(playlist):
     playlist = str(playlist)
     if not playlists['list'].__contains__(playlist):
         return jsonify({'code': 404, 'msg': 'Playlist Not Found'}), 200
-    return playlists['list'][playlist], 200
+    return {'code': 200, 'data': playlists['list'][playlist]}, 200
 
 
 @app.route('/api/v1/music/<int:mid>/lyric', methods=['GET'])
@@ -132,7 +132,7 @@ def get_music(mid):
     new = downloader.musics['list'][mid].copy()
     downloader.delete(new, 'file')
     downloader.delete(new, 'ly_file')
-    return new
+    return {'code': 200, 'data': new}
 
 
 @app.route('/api/v1/music/upload', methods=['POST'])

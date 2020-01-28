@@ -342,3 +342,5 @@ healthchecksdb
 env/
 music/
 temp/
+/playlists.json
+/musics.json
