@@ -341,4 +341,5 @@ healthchecksdb
 
 env/
 music/
+cache*
 temp/

@@ -3,7 +3,7 @@ import codecs
 import hashlib
 import os
 import re
-# from eyeD3 import id3
+from eyed3 import id3
 import shutil
 import ssl
 from urllib import request
@@ -11,9 +11,6 @@ from urllib import request
 import requests
 
 # noinspection PyProtectedMember
-ssl._create_default_https_context = ssl._create_unverified_context
-requests.packages.urllib3.disable_warnings()
-
 
 def GetFileMd5(filename):
     if not os.path.isfile(filename):
@@ -28,6 +25,8 @@ def GetFileMd5(filename):
     f.close()
     return myhash.hexdigest()
 
+def getFixedNumStr(n,maxn):
+    return str(n).zfill(len(str(maxn)))
 
 def validateTitle(title):
     rstr = r"[\·\/\\\:\*\?\"\<\>\|]"
@@ -46,7 +45,7 @@ class Downloader:
     """Backend of The tools"""
     tmp_dir: str = 'cache/'
     end_dir: str = 'music/'
-    api_url: str = 'https://163musicapi.star-home.top:4430'
+    api_url: str = 'https://163musicapi.proxy.star.star-home.top:4430'
     is_order: bool = True
     playlist: str = '510113940'
     callback_progress_BAR = None
@@ -89,7 +88,7 @@ class Downloader:
 
     def fetch_api(self, add):
         self.callback_progress_VERBOSE("Fetching API:" + add[:50] + "...")
-        return requests.get(self.api_url + add, verify=False).json()
+        return requests.get(self.api_url + add).json()
 
     def getFilename(self, name, artist, _type, _id):
         return self.tmp_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(_id) + "." + str(_type)
@@ -145,7 +144,7 @@ class Downloader:
                     try:
                         f.write(lyric['lrc']['lyric'])
                     except KeyError:
-                        f.write("")
+                        f.write("[ti:"+name+"]\n[ar:"+artist+"]\n")
                     f.close()
                     self.status_success_download += 1
                 else:
@@ -192,7 +191,7 @@ class Downloader:
         self.callback_progress_BAR(all_musics, i, '[COPY]' + name)
         if self.is_order:
             shutil.copy(self.getFilename(file[0], file[1], file[2], file[3]),
-                        self.end_dir + str(index + 1) + "-" + validateTitle(name) + ' - ' + validateTitle(
+                        self.end_dir + getFixedNumStr(index + 1,all_musics) + "-" + validateTitle(name) + ' - ' + validateTitle(
                             artist) + "." +
                         str(music_id) + "." + music_type)
         else:
@@ -201,24 +200,24 @@ class Downloader:
                         + music_type)
         if self.is_order:
             shutil.copy(self.getFilename(file[0], file[1], 'lrc', file[3]),
-                        self.end_dir + str(index + 1) + "-" + validateTitle(name) + ' - ' + validateTitle(
+                        self.end_dir + getFixedNumStr(index + 1,all_musics) + "-" + validateTitle(name) + ' - ' + validateTitle(
                             artist) + "." +
                         str(music_id) + ".lrc")
         else:
             shutil.copy(self.getFilename(file[0], file[1], 'lrc', file[3]),
                         self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id)
                         + ".lrc")
-        # tag = id3.Tag()
-        # if self.is_order:
-        #     tag.parse(self.end_dir + str(index+1) + "-" + validateTitle(name) + ' - ' + validateTitle(artist)
-        #               + "." + str(music_id) + "." + music_type)
-        # else:
-        #     tag.parse(self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id) +
-        #               "." + music_type)
-        # tag.artist = artist
-        # tag.title = name
-        # tag.album = adl
-        # tag.save(encoding='utf-8')
+        tag = id3.Tag()
+        if self.is_order:
+            tag.parse(self.end_dir +  getFixedNumStr(index + 1,all_musics) + "-" + validateTitle(name) + ' - ' + validateTitle(artist)
+                      + "." + str(music_id) + "." + music_type)
+        else:
+            tag.parse(self.end_dir + validateTitle(name) + ' - ' + validateTitle(artist) + "." + str(music_id) +
+                      "." + music_type)
+        tag.artist = artist
+        tag.title = name
+        tag.album = adl
+        tag.save(encoding='utf-8')
         return
 
     def run(self):

@@ -4,6 +4,7 @@ from colorama import Fore, Style
 
 from downloader import Downloader
 
+import shutil
 
 def long_Str_setter(delim, long):
     a = 1
@@ -57,11 +58,11 @@ def download_end():
 
 
 if __name__ == '__main__':
-    cloud_music_api = 'https://163musicapi.star-home.top:4430'
+    cloud_music_api = 'https://163musicapi.proxy.star.star-home.top:4430'
     cloud_music_playlist = ['510113940']
     dir_temp = "cache/"
     dir_end = "music/"
-    Enable_ORDER = False
+    Enable_ORDER = True
     Clean_Music_Dir = False
     is_verbose = False
     is_cleaned_list = False
@@ -112,6 +113,8 @@ if __name__ == '__main__':
     print(Style.BRIGHT + long_Str_setter("-", 50) + Style.RESET_ALL)
 
     for cloud_music_playlist_o in cloud_music_playlist:
+        if Clean_Music_Dir:
+            shutil.rmtree(dir_end + cloud_music_playlist_o + '/')
         x = Downloader(dir_temp, dir_end + cloud_music_playlist_o + '/', cloud_music_api, Enable_ORDER,
                        cloud_music_playlist_o).setCallBackStatusFunction(
             empty, empty, download_Start, download_end).setCallBackProgressFunction(
